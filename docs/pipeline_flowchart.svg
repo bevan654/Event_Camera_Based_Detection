@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="580" viewBox="0 0 680 580" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img">
+  <title>Event-based crack detection pipeline</title>
+  <desc>Event camera stream is sliced into adaptive time windows, counted into ON and OFF grids, clipped and normalised into a 2-channel image, passed to a YOLOv6 detector trained with labels, which outputs crack or spalling boxes.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="680" height="580" fill="#FFFFFF"/>
+
+  <rect x="170" y="30" width="300" height="56" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.75"/>
+  <text x="320" y="51" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#2C2C2A">Event camera (DAVIS346)</text>
+  <text x="320" y="69" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Stream of x, y, time, ON/OFF</text>
+  <line x1="320" y1="88" x2="320" y2="116" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="170" y="120" width="300" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/>
+  <text x="320" y="141" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041">Slice a time window</text>
+  <text x="320" y="159" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">Adaptive, at least 15 ms (30 ms night)</text>
+  <line x1="320" y1="178" x2="320" y2="206" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="170" y="210" width="300" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/>
+  <text x="320" y="231" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041">Count into two grids</text>
+  <text x="320" y="249" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">ON and OFF counts per pixel</text>
+  <line x1="320" y1="268" x2="320" y2="296" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="170" y="300" width="300" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.75"/>
+  <text x="320" y="321" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#085041">Clip and normalise</text>
+  <text x="320" y="339" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#0F6E56">2-channel image, resized to 640</text>
+  <line x1="320" y1="358" x2="320" y2="386" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="170" y="390" width="300" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75"/>
+  <text x="320" y="411" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#3C3489">YOLOv6 detector</text>
+  <text x="320" y="429" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Backbone, neck, head</text>
+  <line x1="320" y1="448" x2="320" y2="476" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="170" y="480" width="300" height="56" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.75"/>
+  <text x="320" y="501" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#2C2C2A">Output boxes</text>
+  <text x="320" y="519" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#5F5E5A">Crack or spalling, with confidence</text>
+
+  <rect x="492" y="390" width="160" height="56" rx="8" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.75" stroke-dasharray="4 3"/>
+  <text x="572" y="411" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="500" fill="#3C3489">Labels</text>
+  <text x="572" y="429" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#534AB7">Training only</text>
+  <line x1="490" y1="418" x2="474" y2="418" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>
