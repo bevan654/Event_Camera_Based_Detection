@@ -77,7 +77,7 @@ def main():
     ap.add_argument("--topic", default="/energy/bluerov_heavy_eventclone/event_camera/events")
     ap.add_argument("--weights", default="runs/field_lab_n/weights/best.pt")
     ap.add_argument("--rate", type=float, default=10)  # detections per second
-    ap.add_argument("--conf", type=float, default=0.2)
+    ap.add_argument("--conf", type=float, default=0.4)  # stricter than the paper's 0.2 to cut false alarms on water
     ap.add_argument("--min-ms", type=float, default=15)  # Algorithm 1 minimum window (use 30 for dark scenes)
     args = ap.parse_args()
     rclpy.init()
