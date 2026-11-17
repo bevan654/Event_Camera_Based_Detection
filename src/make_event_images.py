@@ -57,7 +57,7 @@ def yolo_lines(boxes):
     return lines
 
 
-def process_sequence(seq_dir, root, out, per_seq):
+def process_sequence(seq_dir, rel, out, per_seq):
     name = seq_dir.name
     labels = np.load(seq_dir / f"{name}_label.npy")
     cracks = labels[labels[:, 1] == 0]
@@ -65,7 +65,6 @@ def process_sequence(seq_dir, root, out, per_seq):
         return []
     times = np.unique(cracks[:, 0])
     anchors = times[np.linspace(0, len(times) - 1, min(per_seq, len(times))).astype(int)]  # evenly spread moments
-    rel = seq_dir.relative_to(root)
     night = any(w in str(rel).lower() for w in NIGHT_WORDS)
     t, x, y, p = load_events(seq_dir / f"{name}_events.h5")
     rows = []
@@ -85,17 +84,19 @@ def process_sequence(seq_dir, root, out, per_seq):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--root", default="data/evCIVIL_Field_dataset/Field_dataset")
+    ap.add_argument("--roots", nargs="+", default=["data/evCIVIL_Field_dataset/Field_dataset", "data/evCIVIL_Laboratory_dataset/Laboratory_dataset"])
     ap.add_argument("--out", default="data/processed")
     ap.add_argument("--per-seq", type=int, default=12)
     args = ap.parse_args()
-    root, out = Path(args.root), Path(args.out)
+    out = Path(args.out)
     (out / "images").mkdir(parents=True, exist_ok=True)
     (out / "labels").mkdir(parents=True, exist_ok=True)
     rows = []
-    for ev in sorted(root.rglob("*_events.h5")):
-        rows += process_sequence(ev.parent, root, out, args.per_seq)
-        print(f"{ev.parent.relative_to(root)}: total images {len(rows)}")
+    for root in map(Path, args.roots):
+        for ev in sorted(root.rglob("*_events.h5")):
+            rel = ev.parent.relative_to(root.parent)  # keeps "Field_dataset/" or "Laboratory_dataset/" at the front
+            rows += process_sequence(ev.parent, rel, out, args.per_seq)
+            print(f"{rel}: total images {len(rows)}")
     with open(out / "samples.csv", "w", newline="") as f:
         csv.writer(f).writerows([["image", "sequence", "timestamp_us", "window_ms", "num_events", "light", "num_cracks"]] + rows)
     print(f"Done: {len(rows)} images in {out}")
