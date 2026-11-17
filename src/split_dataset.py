@@ -9,8 +9,9 @@ SPLIT_FILES = {"test_day": "splits/test_day.txt", "test_lowlight": "splits/test_
 
 
 def key(seq):
-    # official lists skip some folder levels, so match on the last two parts, e.g. "dset_1/crack_41"
-    return "/".join(seq.strip().split("/")[-2:])
+    # official lists skip some folder levels, so match on dataset + last two parts, e.g. "Field_dataset/dset_1/crack_41"
+    parts = seq.strip().split("/")
+    return "/".join([parts[0]] + parts[-2:])
 
 
 def main():
@@ -18,11 +19,14 @@ def main():
     ap.add_argument("--data", default="data/processed")
     ap.add_argument("--out", default="data/yolo")
     ap.add_argument("--val-frac", type=float, default=0.15)
+    ap.add_argument("--field-only", action="store_true")  # leave the lab recordings out of training
     args = ap.parse_args()
     data, out = Path(args.data), Path(args.out)
 
     test_of = {key(line): name for name, f in SPLIT_FILES.items() for line in open(f) if line.strip()}
     rows = list(csv.DictReader(open(data / "samples.csv")))
+    if args.field_only:
+        rows = [r for r in rows if r["sequence"].startswith("Field_dataset/")]
     train_seqs = sorted({r["sequence"] for r in rows if key(r["sequence"]) not in test_of})
     random.seed(0)
     val_seqs = set(random.sample(train_seqs, max(1, round(len(train_seqs) * args.val_frac))))  # whole recordings go to val
