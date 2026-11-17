@@ -24,9 +24,16 @@ def pick_window(t, x, y, anchor, min_us, max_us=100_000, q=100, extra=175):
         s, e = max(i - q * step, 0), min(i + q * step, len(t))
         span = t[e - 1] - t[s]
         cells = np.bincount((y[s:e] * 4 // H) * 4 + x[s:e] * 4 // W, minlength=16)
-        if (span > min_us and (cells - cells.mean()).max() > extra) or span > max_us or (s == 0 and e == len(t)):
+        if span > min_us and (cells - cells.mean()).max() > extra:
             return s, e
+        if span > max_us or (s == 0 and e == len(t)):
+            return None  # no clear structure found: crack not visible
         step += 1
+
+
+def is_flooded(x, y, limit=0.9):
+    # more than 90% of pixels firing means a sensor glitch, not a real scene
+    return len(np.unique(y.astype(np.int64) * W + x)) > limit * W * H
 
 
 def make_image(x, y, p):
@@ -63,7 +70,11 @@ def process_sequence(seq_dir, root, out, per_seq):
     t, x, y, p = load_events(seq_dir / f"{name}_events.h5")
     rows = []
     for anchor in anchors:
-        s, e = pick_window(t, x, y, anchor, 30_000 if night else 15_000)
+        window = pick_window(t, x, y, anchor, 30_000 if night else 15_000)
+        if window is None or is_flooded(x[window[0]:window[1]], y[window[0]:window[1]]):
+            print(f"  skipped {rel} @ {int(anchor)}")
+            continue
+        s, e = window
         stem = f"{'__'.join(rel.parts)}__{int(anchor)}"
         cv2.imwrite(str(out / "images" / f"{stem}.png"), make_image(x[s:e], y[s:e], p[s:e])[..., ::-1])  # RGB -> BGR for OpenCV
         lines = yolo_lines(cracks[cracks[:, 0] == anchor][:, 2:])
