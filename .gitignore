@@ -1,0 +1,19 @@
+# ev-CIVIL dataset (≈28 GB zipped, ≈95 GB extracted) — download separately
+data/
+*.zip
+*.h5
+*.npy
+*.npz
+
+# Training outputs and weights
+runs/
+*.pt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+
+# Local Claude notes
+CLAUDE.md
