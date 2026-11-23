@@ -3,21 +3,35 @@ import argparse
 from pathlib import Path
 
 import cv2
+import numpy as np
 from ultralytics import YOLO
 
 OLD_MODEL = "/home/shaj0038/Desktop/crack_detection_model/crack.v1i.yolov11/runs/segment/v1_img832/weights/best.pt"
 TESTS = {"well-lit": "test_day", "low-light": "test_lowlight"}
 
 
-def clahe_pipeline(img):
-    # same steps as the old project's apply_clahe.py: grayscale -> CLAHE -> sharpen
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+def clahe(gray):
+    # same steps as the old project's apply_clahe.py: CLAHE -> sharpen
     c = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
-    sharp = cv2.addWeighted(c, 2, cv2.GaussianBlur(c, (13, 13), 0), -1, 0)
-    return cv2.cvtColor(sharp, cv2.COLOR_GRAY2BGR)
+    return cv2.addWeighted(c, 2, cv2.GaussianBlur(c, (13, 13), 0), -1, 0)
 
 
-MODES = {"rgb": lambda img: img, "gray_clahe": clahe_pipeline}
+def gray_b(img):
+    # grayscale B: mid-grey background, ON events lighter, OFF events darker (saved images are BGR = [ON+OFF, OFF, ON])
+    on, off = img[..., 2].astype(np.float32) / 255, img[..., 1].astype(np.float32) / 255
+    return np.clip(128 + 127 * (on - off), 0, 255).astype(np.uint8)
+
+
+def to_bgr(gray):
+    return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+
+
+MODES = {
+    "rgb": lambda img: img,
+    "gray_clahe": lambda img: to_bgr(clahe(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))),
+    "gray_b": lambda img: to_bgr(gray_b(img)),
+    "gray_b_clahe": lambda img: to_bgr(clahe(gray_b(img))),
+}
 
 
 def box_to_polygon(line):
@@ -50,10 +64,11 @@ def main():
     ap.add_argument("--out", default="data/old_model_eval")
     ap.add_argument("--conf", type=float, default=0.2)
     ap.add_argument("--iou", type=float, default=0.4)
+    ap.add_argument("--modes", nargs="+", default=list(MODES), choices=list(MODES))
     args = ap.parse_args()
     model = YOLO(args.weights)
     rows = []
-    for mode in MODES:
+    for mode in args.modes:
         for name, yaml in build(Path(args.data), Path(args.out) / mode, mode).items():
             b = model.val(data=str(yaml), split="test", imgsz=640, conf=args.conf, iou=args.iou, plots=False, verbose=False).box
             f1 = 2 * b.mp * b.mr / max(b.mp + b.mr, 1e-9)
